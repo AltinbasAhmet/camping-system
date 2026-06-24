@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./event-booking-backend
+    container_name: event-booking-backend
+    ports:
+      - "5050:5050"
+      - "5555:5555"
+    environment:
+      DATABASE_URL: "file:/data/dev.db"
+      JWT_SECRET: "supersecretkey"
+      PORT: "5050"
+    volumes:
+      - backend_db:/data
+
+  frontend:
+    build:
+      context: ./event-booking-frontend
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:5050"
+    container_name: event-booking-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  backend_db:
