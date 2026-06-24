@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const campRoutes = require("./routes/camp.routes");
 const reservationRoutes = require("./routes/reservation.routes");
+const checkinRoutes = require("./routes/checkin.routes");
 
 const authRoutes = require("./routes/auth.routes");
 const eventRoutes = require("./routes/event.routes");
@@ -22,6 +23,7 @@ app.use("/events", eventRoutes);
 app.use("/bookings", bookingRoutes);
 app.use("/camps", campRoutes);
 app.use("/reservations", reservationRoutes);
+app.use("/checkin", checkinRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;
