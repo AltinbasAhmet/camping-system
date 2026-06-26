@@ -5,6 +5,7 @@ const reservationRoutes = require("./routes/reservation.routes");
 const checkinRoutes = require("./routes/checkin.routes");
 const campEventRoutes = require("./routes/campEvent.routes");
 const eventBookingRoutes = require("./routes/eventBooking.routes");
+const campPhotoRoutes = require("./routes/campPhoto.routes");
 
 const authRoutes = require("./routes/auth.routes");
 const eventRoutes = require("./routes/event.routes");
@@ -23,11 +24,13 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/bookings", bookingRoutes);
+app.use("/camps", campPhotoRoutes);
 app.use("/camps", campRoutes);
 app.use("/reservations", reservationRoutes);
 app.use("/checkin", checkinRoutes);
 app.use("/camp-events", campEventRoutes);
 app.use("/event-bookings", eventBookingRoutes);
+
 app.use(errorMiddleware);
 
 module.exports = app;
