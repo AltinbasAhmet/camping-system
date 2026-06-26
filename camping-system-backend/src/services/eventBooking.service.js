@@ -91,7 +91,7 @@ async function getMyEventBookings(userId) {
   });
 }
 
-async function getOwnerEventBookings(ownerId) {
+async function getOwnerEventBookings(ownerId, campId) {
   const camps = await prisma.camp.findMany({
     where: {
       ownerId
@@ -103,11 +103,27 @@ async function getOwnerEventBookings(ownerId) {
 
   const campIds = camps.map((camp) => camp.id);
 
+  if (campIds.length === 0) {
+    throw new AppError("Camp not found for this owner", 404);
+  }
+
+  let filteredCampIds = campIds;
+
+  if (campId) {
+    const numericCampId = Number(campId);
+
+    if (!campIds.includes(numericCampId)) {
+      throw new AppError("You can only view event bookings for your own camps", 403);
+    }
+
+    filteredCampIds = [numericCampId];
+  }
+
   return prisma.eventBooking.findMany({
     where: {
       event: {
         campId: {
-          in: campIds
+          in: filteredCampIds
         }
       }
     },

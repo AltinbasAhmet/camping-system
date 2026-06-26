@@ -32,7 +32,10 @@ async function getMyReservations(req, res, next) {
 
 async function getOwnerReservations(req, res, next) {
   try {
-    const reservations = await reservationService.getOwnerReservations(req.user.id);
+    const reservations = await reservationService.getOwnerReservations(
+      req.user.id,
+      req.query.campId
+    );
 
     res.status(200).json({
       success: true,

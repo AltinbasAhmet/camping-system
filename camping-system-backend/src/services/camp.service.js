@@ -84,6 +84,24 @@ async function getAllCamps(query) {
   };
 }
 
+async function getMyCamps(ownerId) {
+  const camps = await prisma.camp.findMany({
+    where: {
+      ownerId
+    },
+    include: {
+      photos: true,
+      events: true,
+      reservations: true
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  return camps;
+}
+
 async function getCampById(id) {
   const camp = await prisma.camp.findUnique({
     where: {
@@ -178,5 +196,6 @@ module.exports = {
   getCampById,
   createCampByAdmin,
   getMyCamp,
+  getMyCamps,
   updateMyCamp
 };

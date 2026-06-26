@@ -10,9 +10,6 @@ const {
 
 const router = express.Router();
 
-router.get("/", campController.getAllCamps);
-router.get("/:id", campController.getCampById);
-
 router.post(
   "/admin/create",
   authMiddleware,
@@ -28,6 +25,13 @@ router.get(
   campController.getMyCamp
 );
 
+router.get(
+  "/owner/my-camps",
+  authMiddleware,
+  roleMiddleware("CAMP_OWNER"),
+  campController.getMyCamps
+);
+
 router.put(
   "/owner/my-camp",
   authMiddleware,
@@ -35,5 +39,10 @@ router.put(
   validate(updateCampSchema),
   campController.updateMyCamp
 );
+
+
+
+router.get("/", campController.getAllCamps);
+router.get("/:id", campController.getCampById);
 
 module.exports = router;

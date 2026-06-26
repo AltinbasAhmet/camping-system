@@ -25,6 +25,18 @@ async function getCampById(req, res, next) {
     next(error);
   }
 }
+async function getMyCamps(req, res, next) {
+  try {
+    const camps = await campService.getMyCamps(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: camps
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 async function createCampByAdmin(req, res, next) {
   try {
@@ -72,5 +84,6 @@ module.exports = {
   getCampById,
   createCampByAdmin,
   getMyCamp,
+  getMyCamps,
   updateMyCamp
 };

@@ -115,20 +115,39 @@ async function getMyReservations(userId) {
   });
 }
 
-async function getOwnerReservations(ownerId) {
-  const camp = await prisma.camp.findFirst({
+async function getOwnerReservations(ownerId, campId) {
+  const camps = await prisma.camp.findMany({
     where: {
       ownerId
+    },
+    select: {
+      id: true
     }
   });
 
-  if (!camp) {
+  const campIds = camps.map((camp) => camp.id);
+
+  if (campIds.length === 0) {
     throw new AppError("Camp not found for this owner", 404);
+  }
+
+  let filteredCampIds = campIds;
+
+  if (campId) {
+    const numericCampId = Number(campId);
+
+    if (!campIds.includes(numericCampId)) {
+      throw new AppError("You can only view reservations for your own camps", 403);
+    }
+
+    filteredCampIds = [numericCampId];
   }
 
   return prisma.campReservation.findMany({
     where: {
-      campId: camp.id
+      campId: {
+        in: filteredCampIds
+      }
     },
     include: {
       user: {
