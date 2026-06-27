@@ -14,29 +14,29 @@ export default function Navbar() {
     setUser(getUser());
   }, []);
 
-const handleLogout = () => {
-  logout();
-  setUser(null);
-  setMenuOpen(false);
-  router.push("/");
-};
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    setMenuOpen(false);
+    router.push("/");
+  };
 
   const navButtonClass =
-    "min-w-[150px] rounded-full border border-blue-200 bg-blue-50 px-9 py-4 text-center text-lg font-bold text-blue-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-100 hover:shadow-md";
+    "min-w-[130px] rounded-full border border-emerald-200 bg-emerald-50 px-7 py-3 text-center text-base font-bold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-md";
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-blue-100 bg-white/80 shadow-sm backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 w-full border-b border-emerald-100 bg-white/85 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-5 md:flex-row md:items-center md:justify-between">
         <Link
           href="/"
-          className="text-3xl font-extrabold tracking-tight text-blue-700"
+          className="text-3xl font-extrabold tracking-tight text-emerald-700"
         >
-          Event Booking
+          CampGate
         </Link>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link href="/events" className={navButtonClass}>
-            Events
+          <Link href="/camps" className={navButtonClass}>
+            Camps
           </Link>
 
           {!user ? (
@@ -60,35 +60,55 @@ const handleLogout = () => {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-blue-100 bg-white p-3 shadow-xl shadow-blue-100/70">
-                  {user.role === "ATTENDEE" && (
-                    <Link
-                      href="/my-bookings"
-                      onClick={() => setMenuOpen(false)}
-                      className="block rounded-2xl px-5 py-3 text-center font-bold text-blue-800 transition hover:bg-blue-50"
-                    >
-                      My Bookings
-                    </Link>
-                  )}
-
-                  {user.role === "ORGANISER" && (
+                <div className="absolute right-0 mt-3 w-64 rounded-3xl border border-emerald-100 bg-white p-3 shadow-xl shadow-emerald-100/70">
+                  {user.role === "USER" && (
                     <>
                       <Link
-                        href="/organiser/dashboard"
+                        href="/my-reservations"
                         onClick={() => setMenuOpen(false)}
-                        className="block rounded-2xl px-5 py-3 text-center font-bold text-blue-800 transition hover:bg-blue-50"
+                        className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
                       >
-                        Dashboard
+                        My Camp Reservations
                       </Link>
 
                       <Link
-                        href="/organiser/events/new"
+                        href="/my-event-bookings"
                         onClick={() => setMenuOpen(false)}
-                        className="block rounded-2xl px-5 py-3 text-center font-bold text-blue-800 transition hover:bg-blue-50"
+                        className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
                       >
-                        Create Event
+                        My Event Bookings
                       </Link>
                     </>
+                  )}
+
+                  {user.role === "CAMP_OWNER" && (
+                    <>
+                      <Link
+                        href="/camp-owner/dashboard"
+                        onClick={() => setMenuOpen(false)}
+                        className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                      >
+                        Owner Dashboard
+                      </Link>
+
+                      <Link
+                        href="/camp-owner/checkin"
+                        onClick={() => setMenuOpen(false)}
+                        className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                      >
+                        Check-in
+                      </Link>
+                    </>
+                  )}
+
+                  {user.role === "SYSTEM_ADMIN" && (
+                    <Link
+                      href="/admin/camps"
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                    >
+                      Admin Camps
+                    </Link>
                   )}
 
                   <button

@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5050";
 
 type ApiOptions = RequestInit & {
   auth?: boolean;
@@ -32,7 +33,8 @@ export async function apiRequest<T = any>(
     headers,
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
     throw new Error(data.message || "Something went wrong");

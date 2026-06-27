@@ -3,8 +3,8 @@ import "./globals.css";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "Event Booking System",
-  description: "SNG346 Event Booking Frontend",
+  title: "CampGate",
+  description: "Camping reservation and camp event platform",
 };
 
 export default function RootLayout({

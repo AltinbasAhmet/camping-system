@@ -44,11 +44,13 @@ export default function LoginPage() {
 
       saveAuth(data.token, data.user);
 
-      if (data.user.role === "ORGANISER") {
-        router.push("/organiser/dashboard");
-      } else {
-        router.push("/events");
-      }
+      if (data.user.role === "CAMP_OWNER") {
+  router.push("/camp-owner/dashboard");
+} else if (data.user.role === "SYSTEM_ADMIN") {
+  router.push("/admin/camps");
+} else {
+  router.push("/camps");
+}
     } catch (err: any) {
       setError(err.message);
     } finally {

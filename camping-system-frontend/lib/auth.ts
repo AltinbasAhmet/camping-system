@@ -1,9 +1,10 @@
-export type UserRole = "ORGANISER" | "ATTENDEE";
+export type UserRole = "USER" | "CAMP_OWNER" | "SYSTEM_ADMIN" | "STAFF";
 
 export type User = {
   id: number;
   name: string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   role: UserRole;
 };
 
