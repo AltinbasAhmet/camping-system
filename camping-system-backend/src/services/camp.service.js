@@ -198,6 +198,48 @@ async function createCampByOwner(ownerId, data) {
   return camp;
 }
 
+async function updateOwnerCamp(ownerId, campId, data) {
+  const camp = await prisma.camp.findUnique({
+    where: {
+      id: Number(campId)
+    }
+  });
+
+  if (!camp) {
+    throw new AppError("Camp not found", 404);
+  }
+
+  if (camp.ownerId !== ownerId) {
+    throw new AppError("You can only update your own camp", 403);
+  }
+
+  return prisma.camp.update({
+    where: {
+      id: camp.id
+    },
+    data: {
+      name: data.name,
+      description: data.description,
+      city: data.city,
+      district: data.district,
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
+      totalCapacity: data.totalCapacity,
+      caravanCapacity: data.caravanCapacity,
+      tentCapacity: data.tentCapacity,
+      pricePerNight: data.pricePerNight,
+      hasToilet: data.hasToilet,
+      hasShower: data.hasShower,
+      hasHotWater: data.hasHotWater,
+      hasElectricity: data.hasElectricity,
+      hasWifi: data.hasWifi,
+      hasMarket: data.hasMarket,
+      petFriendly: data.petFriendly
+    }
+  });
+}
+
 async function getMyCamp(ownerId) {
   const camp = await prisma.camp.findFirst({
     where: {
@@ -242,5 +284,6 @@ module.exports = {
   createCampByOwner,
   getMyCamp,
   getMyCamps,
-  updateMyCamp
+  updateMyCamp,
+  updateOwnerCamp
 };

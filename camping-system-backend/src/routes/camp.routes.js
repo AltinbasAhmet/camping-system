@@ -48,6 +48,13 @@ router.put(
   campController.updateMyCamp
 );
 
+router.put(
+  "/owner/:campId",
+  authMiddleware,
+  roleMiddleware("CAMP_OWNER"),
+  validate(updateCampSchema),
+  campController.updateOwnerCamp
+);
 
 
 router.get("/", campController.getAllCamps);

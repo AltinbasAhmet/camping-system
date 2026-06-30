@@ -216,17 +216,25 @@ export default function CampOwnerDashboardPage() {
                         </Link>
 
                         <Link
-                          href={`/camp-owner/events/new?campId=${camp.id}`}
-                          className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800"
+                          href={`/camp-owner/camps/${camp.id}/edit`}
+                          className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
                         >
-                          Add Event
+                          Edit Camp
                         </Link>
-                        
+
+
                         <Link
                           href={`/camp-owner/camps/${camp.id}/photos`}
                           className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
                         >
                           Manage Photos
+                        </Link>
+
+                        <Link
+                          href={`/camp-owner/events/new?campId=${camp.id}`}
+                          className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800"
+                        >
+                          Add Event
                         </Link>
                       </div>
                     </div>
