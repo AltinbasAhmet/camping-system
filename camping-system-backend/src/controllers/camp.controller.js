@@ -51,6 +51,19 @@ async function createCampByAdmin(req, res, next) {
     next(error);
   }
 }
+async function createCampByOwner(req, res, next) {
+  try {
+    const camp = await campService.createCampByOwner(req.user.id, req.body);
+
+    res.status(201).json({
+      success: true,
+      message: "Camp created successfully",
+      data: camp
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 async function getMyCamp(req, res, next) {
   try {
@@ -83,6 +96,7 @@ module.exports = {
   getAllCamps,
   getCampById,
   createCampByAdmin,
+  createCampByOwner,
   getMyCamp,
   getMyCamps,
   updateMyCamp

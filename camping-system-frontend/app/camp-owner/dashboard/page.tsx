@@ -80,6 +80,13 @@ export default function CampOwnerDashboardPage() {
 
           <div className="flex flex-wrap gap-3">
             <Link
+              href="/camp-owner/camps/new"
+              className="rounded-full border border-emerald-200 bg-white px-6 py-3 font-extrabold text-emerald-700 hover:bg-emerald-50"
+            >
+              Create Camp
+            </Link>
+            
+            <Link
               href="/camp-owner/events/new"
               className="rounded-full bg-emerald-700 px-6 py-3 font-extrabold text-white hover:bg-emerald-800"
             >
@@ -213,6 +220,13 @@ export default function CampOwnerDashboardPage() {
                           className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800"
                         >
                           Add Event
+                        </Link>
+                        
+                        <Link
+                          href={`/camp-owner/camps/${camp.id}/photos`}
+                          className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
+                        >
+                          Manage Photos
                         </Link>
                       </div>
                     </div>

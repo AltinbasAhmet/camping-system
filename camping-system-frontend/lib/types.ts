@@ -71,3 +71,18 @@ export type EventBooking = {
     camp: Camp;
   };
 };
+
+export type CampOwner = {
+  id: number;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  role: string;
+  createdAt: string;
+  ownedCamps?: {
+    id: number;
+    name: string;
+    city: string;
+    status: string;
+  }[];
+};

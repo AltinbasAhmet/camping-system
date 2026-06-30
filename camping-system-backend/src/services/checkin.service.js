@@ -32,9 +32,14 @@ async function searchReservationByPlate(ownerId, plateNumber) {
       },
       guests: true
     },
-    orderBy: {
-      checkInDate: "asc"
-    }
+    orderBy: [
+      {
+        status: "asc"
+      },
+      {
+        checkInDate: "asc"
+      }
+    ]
   });
 
   if (!reservation) {

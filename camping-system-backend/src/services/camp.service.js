@@ -154,6 +154,50 @@ async function createCampByAdmin(data) {
   return camp;
 }
 
+async function createCampByOwner(ownerId, data) {
+  const owner = await prisma.user.findUnique({
+    where: {
+      id: ownerId
+    }
+  });
+
+  if (!owner) {
+    throw new AppError("Owner user not found", 404);
+  }
+
+  if (owner.role !== "CAMP_OWNER") {
+    throw new AppError("Only camp owners can create camps", 403);
+  }
+
+  const camp = await prisma.camp.create({
+    data: {
+      ownerId,
+      name: data.name,
+      description: data.description,
+      city: data.city,
+      district: data.district,
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
+      totalCapacity: data.totalCapacity,
+      caravanCapacity: data.caravanCapacity,
+      tentCapacity: data.tentCapacity,
+      pricePerNight: data.pricePerNight,
+      hasToilet: data.hasToilet || false,
+      hasShower: data.hasShower || false,
+      hasHotWater: data.hasHotWater || false,
+      hasElectricity: data.hasElectricity || false,
+      hasWifi: data.hasWifi || false,
+      hasMarket: data.hasMarket || false,
+      petFriendly: data.petFriendly || false,
+      customerNumber: generateCustomerNumber(),
+      status: "ACTIVE"
+    }
+  });
+
+  return camp;
+}
+
 async function getMyCamp(ownerId) {
   const camp = await prisma.camp.findFirst({
     where: {
@@ -195,6 +239,7 @@ module.exports = {
   getAllCamps,
   getCampById,
   createCampByAdmin,
+  createCampByOwner,
   getMyCamp,
   getMyCamps,
   updateMyCamp

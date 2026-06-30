@@ -18,6 +18,14 @@ router.post(
   campController.createCampByAdmin
 );
 
+router.post(
+  "/owner/create",
+  authMiddleware,
+  roleMiddleware("CAMP_OWNER"),
+  validate(createCampSchema.omit({ ownerId: true })),
+  campController.createCampByOwner
+);
+
 router.get(
   "/owner/my-camp",
   authMiddleware,
