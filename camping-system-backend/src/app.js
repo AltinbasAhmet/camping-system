@@ -9,8 +9,6 @@ const campPhotoRoutes = require("./routes/campPhoto.routes");
 const adminRoutes = require("./routes/admin.routes");
 
 const authRoutes = require("./routes/auth.routes");
-const eventRoutes = require("./routes/event.routes");
-const bookingRoutes = require("./routes/booking.routes");
 const errorMiddleware = require("./middlewares/error.middleware");
 
 const app = express();
@@ -24,8 +22,6 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
-app.use("/events", eventRoutes);
-app.use("/bookings", bookingRoutes);
 app.use("/camps", campPhotoRoutes);
 app.use("/camps", campRoutes);
 app.use("/reservations", reservationRoutes);

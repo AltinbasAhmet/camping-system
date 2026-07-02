@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("ATTENDEE");
+  
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -112,8 +112,7 @@ export default function RegisterPage() {
             value={role}
             onChange={(e) => setRole(e.target.value as UserRole)}
           >
-            <option value="ATTENDEE">Attendee</option>
-            <option value="ORGANISER">Organiser</option>
+          
           </select>
 
           <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-slate-400">
