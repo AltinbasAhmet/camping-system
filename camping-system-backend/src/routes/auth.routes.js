@@ -1,19 +1,33 @@
 const express = require("express");
+const authController = require("../controllers/auth.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
+const validate = require("../middlewares/validate.middleware");
+
+const {
+  registerSchema,
+  loginSchema,
+  changePasswordSchema
+} = require("../validators/auth.validator");
+
 const router = express.Router();
 
-const authController = require("../controllers/auth.controller");
-const { registerSchema, loginSchema } = require("../validators/auth.validator");
+router.post(
+  "/register",
+  validate(registerSchema),
+  authController.register
+);
 
-const validate = (schema) => (req, res, next) => {
-  try {
-    req.body = schema.parse(req.body);
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
+router.post(
+  "/login",
+  validate(loginSchema),
+  authController.login
+);
 
-router.post("/register", validate(registerSchema), authController.register);
-router.post("/login", validate(loginSchema), authController.login);
+router.put(
+  "/change-password",
+  authMiddleware,
+  validate(changePasswordSchema),
+  authController.changePassword
+);
 
 module.exports = router;

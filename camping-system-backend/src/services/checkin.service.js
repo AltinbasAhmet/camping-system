@@ -89,6 +89,35 @@ async function confirmCheckIn(ownerId, reservationId) {
   });
 }
 
+async function searchReservationByCode(ownerId, reservationCode) {
+  const reservation = await prisma.campReservation.findFirst({
+    where: {
+      reservationCode: reservationCode.trim().toUpperCase(),
+      camp: {
+        ownerId
+      }
+    },
+    include: {
+      camp: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      },
+      guests: true
+    }
+  });
+
+  if (!reservation) {
+    throw new AppError("Reservation not found for this code", 404);
+  }
+
+  return reservation;
+}
+
 async function confirmCheckOut(ownerId, reservationId) {
   const camp = await prisma.camp.findFirst({
     where: {
@@ -131,6 +160,7 @@ async function confirmCheckOut(ownerId, reservationId) {
 
 module.exports = {
   searchReservationByPlate,
+  searchReservationByCode,
   confirmCheckIn,
   confirmCheckOut
 };

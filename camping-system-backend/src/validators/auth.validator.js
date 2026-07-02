@@ -18,7 +18,13 @@ const loginSchema = z.object({
   message: "Email or phone is required"
 });
 
+ const changePasswordSchema = z.object({
+  currentPassword: z.string().min(6),
+  newPassword: z.string().min(6)
+});
+
 module.exports = {
   registerSchema,
-  loginSchema
+  loginSchema,
+  changePasswordSchema
 };

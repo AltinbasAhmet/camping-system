@@ -42,6 +42,7 @@ export default function CampOwnerCheckinPage() {
   const router = useRouter();
 
   const [plateNumber, setPlateNumber] = useState("");
+  const [reservationCode, setReservationCode] = useState("");
   const [reservation, setReservation] = useState<CheckinReservation | null>(
     null
   );
@@ -97,6 +98,38 @@ export default function CampOwnerCheckinPage() {
       setLoading(false);
     }
   }
+  async function searchByCode(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+
+  try {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    setReservation(null);
+
+    if (!reservationCode.trim()) {
+      throw new Error("Please enter a reservation code.");
+    }
+
+    const response = await apiRequest<{
+      success: boolean;
+      data: CheckinReservation;
+    }>("/checkin/search-by-code", {
+      method: "POST",
+      body: JSON.stringify({
+        reservationCode: reservationCode.trim(),
+      }),
+    });
+
+    setReservation(response.data);
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Reservation search failed"
+    );
+  } finally {
+    setLoading(false);
+  }
+}
 
   async function confirmCheckIn() {
     if (!reservation) return;
@@ -190,31 +223,54 @@ export default function CampOwnerCheckinPage() {
         </div>
 
         <section className="rounded-[32px] border border-emerald-100 bg-white p-6 shadow-sm">
-          <form onSubmit={searchByPlate} className="grid gap-4 md:grid-cols-[1fr_auto]">
-            <div>
-              <label className="mb-2 block font-bold text-slate-700">
-                Plate Number
-              </label>
+  <div className="grid gap-6 md:grid-cols-2">
+    <form onSubmit={searchByPlate} className="space-y-4">
+      <div>
+        <label className="mb-2 block font-bold text-slate-700">
+          Search by Plate Number
+        </label>
 
-              <input
-                value={plateNumber}
-                onChange={(event) => setPlateNumber(event.target.value)}
-                placeholder="01ABC123"
-                className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
-              />
-            </div>
+        <input
+          value={plateNumber}
+          onChange={(event) => setPlateNumber(event.target.value)}
+          placeholder="01ABC123"
+          className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
+        />
+      </div>
 
-            <div className="flex items-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-2xl bg-emerald-700 px-8 py-3 font-extrabold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400 md:w-auto"
-              >
-                {loading ? "Searching..." : "Search"}
-              </button>
-            </div>
-          </form>
-        </section>
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-2xl bg-emerald-700 px-8 py-3 font-extrabold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+      >
+        {loading ? "Searching..." : "Search Plate"}
+      </button>
+    </form>
+
+    <form onSubmit={searchByCode} className="space-y-4">
+      <div>
+        <label className="mb-2 block font-bold text-slate-700">
+          Search by Reservation Code
+        </label>
+
+        <input
+          value={reservationCode}
+          onChange={(event) => setReservationCode(event.target.value)}
+          placeholder="RES-323985"
+          className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-2xl border border-emerald-200 bg-white px-8 py-3 font-extrabold text-emerald-700 shadow-sm hover:bg-emerald-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+      >
+        {loading ? "Searching..." : "Search Code"}
+      </button>
+    </form>
+  </div>
+</section>
 
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">

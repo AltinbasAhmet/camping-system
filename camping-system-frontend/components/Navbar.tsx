@@ -102,24 +102,32 @@ export default function Navbar() {
                   )}
 
                   {user.role === "SYSTEM_ADMIN" && (
-  <>
-    <Link
-      href="/admin/camps"
-      onClick={() => setMenuOpen(false)}
-      className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
-    >
-      Admin Camps
-    </Link>
+                <>
+                  <Link
+                    href="/admin/camps"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                  >
+                    Admin Camps
+                  </Link>
 
-    <Link
-      href="/admin/owners"
-      onClick={() => setMenuOpen(false)}
-      className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
-    >
-      Camp Owners
-    </Link>
-  </>
-)}
+                  <Link
+                    href="/admin/owners"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                  >
+                    Camp Owners
+                  </Link>
+                </>
+              )}
+
+                  <Link
+                    href="/change-password"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-2xl px-5 py-3 text-center font-bold text-emerald-800 transition hover:bg-emerald-50"
+                  >
+                    Change Password
+                  </Link>
 
                   <button
                     type="button"

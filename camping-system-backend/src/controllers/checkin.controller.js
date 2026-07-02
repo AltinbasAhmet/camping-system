@@ -50,8 +50,25 @@ async function confirmCheckOut(req, res, next) {
   }
 }
 
+async function searchByCode(req, res, next) {
+  try {
+    const reservation = await checkinService.searchReservationByCode(
+      req.user.id,
+      req.body.reservationCode
+    );
+
+    res.status(200).json({
+      success: true,
+      data: reservation
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   searchByPlate,
+  searchByCode,
   confirmCheckIn,
   confirmCheckOut
 };

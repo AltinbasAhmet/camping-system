@@ -3,8 +3,10 @@ const checkinController = require("../controllers/checkin.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
 const validate = require("../middlewares/validate.middleware");
+
 const {
-  searchByPlateSchema
+  searchByPlateSchema,
+  searchByCodeSchema
 } = require("../validators/checkin.validator");
 
 const router = express.Router();
@@ -29,6 +31,14 @@ router.post(
   authMiddleware,
   roleMiddleware("CAMP_OWNER"),
   checkinController.confirmCheckOut
+);
+
+router.post(
+  "/search-by-code",
+  authMiddleware,
+  roleMiddleware("CAMP_OWNER"),
+  validate(searchByCodeSchema),
+  checkinController.searchByCode
 );
 
 module.exports = router;
