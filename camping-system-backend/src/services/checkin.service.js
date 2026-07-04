@@ -2,22 +2,11 @@ const prisma = require("../lib/prisma");
 const AppError = require("../utils/AppError");
 
 async function searchReservationByPlate(ownerId, plateNumber) {
-  const camp = await prisma.camp.findFirst({
+  const reservations = await prisma.campReservation.findMany({
     where: {
-      ownerId
-    }
-  });
-
-  if (!camp) {
-    throw new AppError("Camp not found for this owner", 404);
-  }
-
-  const reservation = await prisma.campReservation.findFirst({
-    where: {
-      campId: camp.id,
-      plateNumber: plateNumber.toUpperCase(),
-      status: {
-        in: ["CONFIRMED", "CHECKED_IN"]
+      plateNumber: plateNumber.trim().toUpperCase(),
+      camp: {
+        ownerId
       }
     },
     include: {
@@ -34,36 +23,37 @@ async function searchReservationByPlate(ownerId, plateNumber) {
     },
     orderBy: [
       {
-        status: "asc"
+        checkInDate: "asc"
       },
       {
-        checkInDate: "asc"
+        createdAt: "desc"
       }
     ]
   });
 
-  if (!reservation) {
-    throw new AppError("Reservation not found for this plate", 404);
+  if (reservations.length === 0) {
+    throw new AppError("No reservations found for this plate", 404);
   }
 
-  return reservation;
+  return reservations;
 }
 
 async function confirmCheckIn(ownerId, reservationId) {
-  const camp = await prisma.camp.findFirst({
+  const reservation = await prisma.campReservation.findUnique({
     where: {
-      ownerId
-    }
-  });
-
-  if (!camp) {
-    throw new AppError("Camp not found for this owner", 404);
-  }
-
-  const reservation = await prisma.campReservation.findFirst({
-    where: {
-      id: Number(reservationId),
-      campId: camp.id
+      id: Number(reservationId)
+    },
+    include: {
+      camp: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      },
+      guests: true
     }
   });
 
@@ -71,8 +61,35 @@ async function confirmCheckIn(ownerId, reservationId) {
     throw new AppError("Reservation not found", 404);
   }
 
+  if (reservation.camp.ownerId !== ownerId) {
+    throw new AppError("You can only check-in your own camp reservations", 403);
+  }
+
   if (reservation.status !== "CONFIRMED") {
     throw new AppError("Only confirmed reservations can be checked in", 400);
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const checkInDate = new Date(reservation.checkInDate);
+  checkInDate.setHours(0, 0, 0, 0);
+
+  const checkOutDate = new Date(reservation.checkOutDate);
+  checkOutDate.setHours(0, 0, 0, 0);
+
+  if (today < checkInDate) {
+    throw new AppError(
+      "Check-in cannot be completed before the reservation start date",
+      400
+    );
+  }
+
+  if (today > checkOutDate) {
+    throw new AppError(
+      "Check-in cannot be completed after the reservation end date",
+      400
+    );
   }
 
   return prisma.campReservation.update({
@@ -84,6 +101,14 @@ async function confirmCheckIn(ownerId, reservationId) {
     },
     include: {
       camp: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      },
       guests: true
     }
   });

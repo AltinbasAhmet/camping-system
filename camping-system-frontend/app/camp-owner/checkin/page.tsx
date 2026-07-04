@@ -43,9 +43,14 @@ export default function CampOwnerCheckinPage() {
 
   const [plateNumber, setPlateNumber] = useState("");
   const [reservationCode, setReservationCode] = useState("");
+
   const [reservation, setReservation] = useState<CheckinReservation | null>(
     null
   );
+
+  const [reservationResults, setReservationResults] = useState<
+    CheckinReservation[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -64,7 +69,7 @@ export default function CampOwnerCheckinPage() {
       router.push("/camps");
       return;
     }
-  }, []);
+  }, [router]);
 
   async function searchByPlate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,6 +79,7 @@ export default function CampOwnerCheckinPage() {
       setError("");
       setSuccess("");
       setReservation(null);
+      setReservationResults([]);
 
       if (!plateNumber.trim()) {
         throw new Error("Please enter a plate number.");
@@ -81,7 +87,7 @@ export default function CampOwnerCheckinPage() {
 
       const response = await apiRequest<{
         success: boolean;
-        data: CheckinReservation;
+        data: CheckinReservation[];
       }>("/checkin/search-by-plate", {
         method: "POST",
         body: JSON.stringify({
@@ -89,47 +95,52 @@ export default function CampOwnerCheckinPage() {
         }),
       });
 
-      setReservation(response.data);
+      const results = response.data || [];
+
+      setReservationResults(results);
+
+      if (results.length === 1) {
+        setReservation(results[0]);
+      }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Reservation search failed"
-      );
+      setError(err instanceof Error ? err.message : "Reservation search failed");
     } finally {
       setLoading(false);
     }
   }
+
   async function searchByCode(event: React.FormEvent<HTMLFormElement>) {
-  event.preventDefault();
+    event.preventDefault();
 
-  try {
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    setReservation(null);
+    try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
+      setReservation(null);
+      setReservationResults([]);
 
-    if (!reservationCode.trim()) {
-      throw new Error("Please enter a reservation code.");
+      if (!reservationCode.trim()) {
+        throw new Error("Please enter a reservation code.");
+      }
+
+      const response = await apiRequest<{
+        success: boolean;
+        data: CheckinReservation;
+      }>("/checkin/search-by-code", {
+        method: "POST",
+        body: JSON.stringify({
+          reservationCode: reservationCode.trim(),
+        }),
+      });
+
+      setReservationResults([]);
+      setReservation(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reservation search failed");
+    } finally {
+      setLoading(false);
     }
-
-    const response = await apiRequest<{
-      success: boolean;
-      data: CheckinReservation;
-    }>("/checkin/search-by-code", {
-      method: "POST",
-      body: JSON.stringify({
-        reservationCode: reservationCode.trim(),
-      }),
-    });
-
-    setReservation(response.data);
-  } catch (err) {
-    setError(
-      err instanceof Error ? err.message : "Reservation search failed"
-    );
-  } finally {
-    setLoading(false);
   }
-}
 
   async function confirmCheckIn() {
     if (!reservation) return;
@@ -148,6 +159,13 @@ export default function CampOwnerCheckinPage() {
       });
 
       setReservation(response.data);
+
+      setReservationResults((previous) =>
+        previous.map((item) =>
+          item.id === response.data.id ? response.data : item
+        )
+      );
+
       setSuccess(response.message || "Check-in completed successfully.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check-in failed");
@@ -173,6 +191,13 @@ export default function CampOwnerCheckinPage() {
       });
 
       setReservation(response.data);
+
+      setReservationResults((previous) =>
+        previous.map((item) =>
+          item.id === response.data.id ? response.data : item
+        )
+      );
+
       setSuccess(response.message || "Check-out completed successfully.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check-out failed");
@@ -209,8 +234,9 @@ export default function CampOwnerCheckinPage() {
             <h1 className="text-4xl font-extrabold text-slate-950">
               Check-in / Check-out
             </h1>
+
             <p className="mt-2 text-slate-500">
-              Search reservations by vehicle plate and manage arrivals.
+              Search reservations by vehicle plate or reservation code.
             </p>
           </div>
 
@@ -223,54 +249,54 @@ export default function CampOwnerCheckinPage() {
         </div>
 
         <section className="rounded-[32px] border border-emerald-100 bg-white p-6 shadow-sm">
-  <div className="grid gap-6 md:grid-cols-2">
-    <form onSubmit={searchByPlate} className="space-y-4">
-      <div>
-        <label className="mb-2 block font-bold text-slate-700">
-          Search by Plate Number
-        </label>
+          <div className="grid gap-6 md:grid-cols-2">
+            <form onSubmit={searchByPlate} className="space-y-4">
+              <div>
+                <label className="mb-2 block font-bold text-slate-700">
+                  Search by Plate Number
+                </label>
 
-        <input
-          value={plateNumber}
-          onChange={(event) => setPlateNumber(event.target.value)}
-          placeholder="01ABC123"
-          className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
-        />
-      </div>
+                <input
+                  value={plateNumber}
+                  onChange={(event) => setPlateNumber(event.target.value)}
+                  placeholder="01ABC123"
+                  className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
+                />
+              </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-2xl bg-emerald-700 px-8 py-3 font-extrabold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-      >
-        {loading ? "Searching..." : "Search Plate"}
-      </button>
-    </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-emerald-700 px-8 py-3 font-extrabold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {loading ? "Searching..." : "Search Plate"}
+              </button>
+            </form>
 
-    <form onSubmit={searchByCode} className="space-y-4">
-      <div>
-        <label className="mb-2 block font-bold text-slate-700">
-          Search by Reservation Code
-        </label>
+            <form onSubmit={searchByCode} className="space-y-4">
+              <div>
+                <label className="mb-2 block font-bold text-slate-700">
+                  Search by Reservation Code
+                </label>
 
-        <input
-          value={reservationCode}
-          onChange={(event) => setReservationCode(event.target.value)}
-          placeholder="RES-323985"
-          className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
-        />
-      </div>
+                <input
+                  value={reservationCode}
+                  onChange={(event) => setReservationCode(event.target.value)}
+                  placeholder="RES-323985"
+                  className="w-full rounded-2xl border border-emerald-100 px-4 py-3 uppercase outline-none focus:border-emerald-400"
+                />
+              </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-2xl border border-emerald-200 bg-white px-8 py-3 font-extrabold text-emerald-700 shadow-sm hover:bg-emerald-50 disabled:cursor-not-allowed disabled:bg-slate-100"
-      >
-        {loading ? "Searching..." : "Search Code"}
-      </button>
-    </form>
-  </div>
-</section>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl border border-emerald-200 bg-white px-8 py-3 font-extrabold text-emerald-700 shadow-sm hover:bg-emerald-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                {loading ? "Searching..." : "Search Code"}
+              </button>
+            </form>
+          </div>
+        </section>
 
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
@@ -284,11 +310,79 @@ export default function CampOwnerCheckinPage() {
           </div>
         )}
 
-        {!reservation && !loading && (
+        {!reservation && reservationResults.length === 0 && !loading && (
           <section className="rounded-[32px] border border-emerald-100 bg-white p-10 text-center shadow-sm">
             <p className="text-slate-500">
-              Enter a plate number to find a reservation.
+              Enter a plate number or reservation code to find a reservation.
             </p>
+          </section>
+        )}
+
+        {reservationResults.length > 1 && (
+          <section className="rounded-[32px] border border-emerald-100 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-extrabold text-slate-950">
+              Reservation Results
+            </h2>
+
+            <p className="mt-2 text-slate-500">
+              Multiple reservations found for this plate. Select the correct
+              reservation.
+            </p>
+
+            <div className="mt-6 grid gap-4">
+              {reservationResults.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setReservation(item);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  className={`rounded-3xl border p-5 text-left transition ${
+                    reservation?.id === item.id
+                      ? "border-emerald-400 bg-emerald-100"
+                      : "border-emerald-100 bg-emerald-50/60 hover:border-emerald-300 hover:bg-emerald-50"
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h3 className="text-xl font-extrabold text-slate-950">
+                        {item.camp.name}
+                      </h3>
+
+                      <p className="mt-1 font-bold text-slate-500">
+                        Code: {item.reservationCode}
+                      </p>
+
+                      <p className="mt-1 text-slate-500">
+                        {new Date(item.checkInDate).toLocaleDateString()} -{" "}
+                        {new Date(item.checkOutDate).toLocaleDateString()}
+                      </p>
+
+                      <p className="mt-1 text-slate-500">
+                        Plate: {item.plateNumber}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span
+                        className={`rounded-full px-4 py-2 text-sm font-extrabold ${getStatusStyle(
+                          item.status
+                        )}`}
+                      >
+                        {item.status}
+                      </span>
+
+                      <span className="rounded-full bg-white px-4 py-2 text-sm font-extrabold text-slate-700">
+                        {item.guestCount} guest
+                        {item.guestCount > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </section>
         )}
 

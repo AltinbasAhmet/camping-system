@@ -1,133 +1,169 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { apiRequest } from "@/lib/api";
-import { saveAuth, User, UserRole } from "@/lib/auth";
 import { useRouter } from "next/navigation";
-
-type RegisterResponse = {
-  success: boolean;
-  message: string;
-  token: string;
-  user: User;
-};
+import { apiRequest } from "@/lib/api";
+import { saveAuth } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-
-    if (name.trim().length < 2) {
-      setError("Name must be at least 2 characters.");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
+  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
     try {
       setLoading(true);
+      setError("");
 
-      const data = await apiRequest<RegisterResponse>("/auth/register", {
+      if (!name.trim()) {
+        throw new Error("Name is required.");
+      }
+
+      if (!email.trim() && !phone.trim()) {
+        throw new Error("Email or phone is required.");
+      }
+
+      if (password.length < 6) {
+        throw new Error("Password must be at least 6 characters.");
+      }
+
+      const response = await apiRequest<{
+        success: boolean;
+        message: string;
+        token: string;
+        user: {
+          id: number;
+          name: string;
+          email?: string | null;
+          phone?: string | null;
+          role: "USER" | "CAMP_OWNER" | "SYSTEM_ADMIN" | "STAFF";
+        };
+      }>("/auth/register", {
         method: "POST",
+        auth: false,
         body: JSON.stringify({
           name,
-          email,
+          email: email || undefined,
+          phone: phone || undefined,
           password,
-          role,
         }),
       });
 
-      saveAuth(data.token, data.user);
-
-      if (data.user.role === "ORGANISER") {
-        router.push("/organiser/dashboard");
-      } else {
-        router.push("/events");
-      }
-    } catch (err: any) {
-      setError(err.message);
+      saveAuth(response.token, response.user);
+      router.push("/camps");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Register failed");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-  <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-sky-100 px-5 py-12">
-    <div className="w-full max-w-xl rounded-[32px] border border-blue-100 bg-white/85 p-8 shadow-xl shadow-blue-100/60 backdrop-blur">
-      <h1 className="mb-8 text-4xl font-extrabold tracking-tight text-slate-900">
-        Register
-      </h1>
+    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 px-6 py-12">
+      <div className="mx-auto max-w-xl">
+        <section className="rounded-[36px] border border-emerald-100 bg-white p-8 shadow-xl shadow-emerald-100/60">
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-extrabold text-slate-950">
+              Create Account
+            </h1>
 
-      {error && (
-        <p className="mb-5 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-700">
-          {error}
-        </p>
-      )}
+            <p className="mt-2 text-slate-500">
+              Sign up as a camper and start making reservations.
+            </p>
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <input
-          placeholder="Name"
-          className="w-full rounded-2xl border border-blue-100 bg-blue-50/30 px-6 py-5 text-lg text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+          {error && (
+            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+              {error}
+            </div>
+          )}
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full rounded-2xl border border-blue-100 bg-blue-50/30 px-6 py-5 text-lg text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div>
+              <label className="mb-2 block font-bold text-slate-700">
+                Full Name
+              </label>
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full rounded-2xl border border-blue-100 bg-blue-50/30 px-6 py-5 text-lg text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Test User"
+                className="w-full rounded-2xl border border-emerald-100 px-4 py-3 outline-none focus:border-emerald-400"
+              />
+            </div>
 
-        <div className="relative">
-          <select
-            className="w-full appearance-none rounded-2xl border border-blue-100 bg-blue-50/30 px-6 py-5 pr-12 text-lg text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-          >
-          
-          </select>
+            <div>
+              <label className="mb-2 block font-bold text-slate-700">
+                Email
+              </label>
 
-          <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-slate-400">
-            ▾
-          </span>
-        </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="user@example.com"
+                className="w-full rounded-2xl border border-emerald-100 px-4 py-3 outline-none focus:border-emerald-400"
+              />
+            </div>
 
-        <button
-          disabled={loading}
-          className="w-full rounded-2xl bg-gradient-to-r from-blue-700 to-sky-500 py-5 text-lg font-bold text-white shadow-lg shadow-blue-200/70 transition hover:from-blue-800 hover:to-sky-600 hover:shadow-xl disabled:opacity-50"
-        >
-          {loading ? "Creating account..." : "Register"}
-        </button>
-      </form>
-    </div>
-  </main>
-);
+            <div>
+              <label className="mb-2 block font-bold text-slate-700">
+                Phone
+              </label>
+
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="05555555555"
+                className="w-full rounded-2xl border border-emerald-100 px-4 py-3 outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block font-bold text-slate-700">
+                Password
+              </label>
+
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="123456"
+                className="w-full rounded-2xl border border-emerald-100 px-4 py-3 outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-emerald-700 px-6 py-4 text-lg font-extrabold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            >
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-slate-500">
+            Already have an account?{" "}
+            <Link href="/login" className="font-extrabold text-emerald-700">
+              Login
+            </Link>
+          </p>
+
+          <div className="mt-6 rounded-2xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+            Camp owner accounts are created by the system admin. This sign up
+            page is only for regular campers.
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
