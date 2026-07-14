@@ -1,26 +1,98 @@
-# Event Booking & Ticketing System
+# CampPal – Camping Reservation and Management System
 
-This project is a full-stack web application developed for the SNG346 Web Application Development semester project.
+CampPal is a full-stack web application designed to bring campers, campground owners, and system administrators together on a single platform.
 
-The selected project option is:
+The application allows users to discover campgrounds, review available facilities, explore events, make reservations, and manage their bookings. Campground owners can manage their campgrounds, events, reservations, guest check-ins, and operational information through a dedicated management area.
 
-**Option 2: Event Booking & Ticketing System**
-
-The system allows organisers to create and manage events, while attendees can browse events and book tickets. It includes authentication, role-based authorisation, event management, booking management, organiser dashboard, frontend integration, and Docker-based deployment.
+> This project is under active development. Some administrative, payment, notification, and approval features may still be in progress.
 
 ---
 
-## Team Members
+## Project Purpose
 
-- Student Name: Sıla Öztürk  
-  Student ID: 2587483
+CampPal aims to simplify the camping reservation process and provide campground businesses with a centralized management system.
 
-- Student Name: Ahmet Altınbaş  
-  Student ID: 2586345
+The platform is designed for three main user groups:
+
+- **Users:** Discover campgrounds and events, make reservations, and manage their bookings.
+- **Campground Owners:** Manage campground information, reservations, events, availability, and guest check-in/check-out operations.
+- **Administrators:** Supervise the platform, manage users and campground owners, review campground applications, and control system-wide operations.
 
 ---
 
-## Tech Stack
+## Main Features
+
+### User Features
+
+Users can:
+
+- Create an account and log in securely
+- Browse available campgrounds
+- View campground details, facilities, photos, and capacity information
+- Browse campground events
+- Make campground and event reservations
+- View their own reservations
+- Cancel eligible reservations
+- Track reservation status
+- Access reservation details and reservation codes
+
+### Campground Owner Features
+
+Campground owners can:
+
+- Access a dedicated owner dashboard
+- Create and manage their campground information
+- Create, update, and manage events
+- View campground reservations
+- View ticket and reservation information
+- Search reservations by licence plate
+- Search reservations by reservation code
+- Confirm guest check-in
+- Complete guest check-out
+- Update their password
+- Access reservation and occupancy information
+
+### Administrator Features
+
+The administrator panel is intended to provide platform-wide control, including:
+
+- Managing users and campground owners
+- Creating campground owner accounts
+- Reviewing campground applications
+- Approving or rejecting campground listings
+- Managing campgrounds, events, and reservations
+- Monitoring system activity
+- Managing platform rules and operational settings
+
+---
+
+## Reservation and Check-In Flow
+
+A typical campground reservation flow works as follows:
+
+1. The user creates an account or logs in.
+2. The user browses campgrounds and selects a suitable campground.
+3. The user reviews campground details and available dates.
+4. The user creates a reservation.
+5. The system generates reservation information and a reservation code.
+6. The campground owner searches for the reservation using the licence plate or reservation code.
+7. The owner confirms the guest's check-in.
+8. When the stay is completed, the owner confirms check-out.
+
+Reservation statuses may include:
+
+- `PENDING`
+- `CONFIRMED`
+- `CANCELLED`
+- `CHECKED_IN`
+- `CHECKED_OUT`
+- `NO_SHOW`
+
+Some status transitions are protected by business rules. For example, a reservation cannot be checked in before the permitted date.
+
+---
+
+## Technology Stack
 
 ### Backend
 
@@ -29,8 +101,9 @@ The system allows organisers to create and manage events, while attendees can br
 - Prisma ORM
 - SQLite
 - JWT authentication
-- RESTful API
-- bcrypt for password hashing
+- bcrypt password hashing
+- RESTful API architecture
+- Zod request validation
 
 ### Frontend
 
@@ -40,472 +113,159 @@ The system allows organisers to create and manage events, while attendees can br
 - Tailwind CSS
 - Fetch API
 
-### Deployment
+### Development Tools
 
-- Docker
-- Docker Compose
+- Git and GitHub
+- npm
+- Prisma CLI
+- Thunder Client or Postman
+- Docker and Docker Compose, where configured
 
 ---
 
-## Architecture Overview
+## System Architecture
 
-The project follows a layered architecture to keep concerns cleanly separated across both the backend and the frontend.
+The backend follows a layered architecture:
 
-### Backend Architecture
-
-The backend is a Node.js + Express.js REST API structured in four layers:
-
-```
-Request → Route → Middleware → Controller → Service → Prisma (Database)
-```
-
-**Routes** (`src/routes/`) define the URL paths and attach the appropriate middleware and controller functions.
-
-**Middleware** (`src/middlewares/`) handles cross-cutting concerns before the request reaches the controller:
-- `auth.middleware.js` — verifies the JWT token from the `Authorization` header and attaches the decoded user (`id`, `role`) to `req.user`.
-- `role.middleware.js` — checks that `req.user.role` matches the role(s) required by the route.
-- `validate.middleware.js` — runs Zod schema validation on the request body and returns a 400 error if validation fails.
-- `error.middleware.js` — global error handler that catches any unhandled errors and returns a consistent JSON error response.
-
-**Controllers** (`src/controllers/`) receive the validated request, extract what they need (params, body, `req.user`), call the relevant service function, and send the HTTP response.
-
-**Services** (`src/services/`) contain all business logic and database interaction via Prisma. This is where rules like overbooking prevention, ownership checks, and capacity validation are enforced.
-
-**Prisma** (`prisma/schema.prisma`) manages the database schema, migrations, and query execution against a SQLite database.
-
-### Frontend Architecture
-
-The frontend is a Next.js application using the App Router.
-
-```
-Page (app/) → lib/api.ts (fetch wrapper) → Backend REST API
+```text
+Request
+   ↓
+Route
+   ↓
+Middleware
+   ↓
+Controller
+   ↓
+Service
+   ↓
+Prisma ORM
+   ↓
+Database
 ```
 
-**Pages** (`app/`) are React components that fetch data on mount and manage local state for loading, errors, and success messages.
+### Backend Layers
 
-**`lib/api.ts`** is a shared `apiRequest()` wrapper around `fetch` that automatically attaches the JWT token from `localStorage` to the `Authorization` header for protected requests.
+- **Routes:** Define API endpoints and connect requests to controllers.
+- **Middleware:** Handles authentication, authorization, validation, and error processing.
+- **Controllers:** Receive requests and return HTTP responses.
+- **Services:** Contain business rules and database operations.
+- **Prisma:** Manages database models, migrations, and queries.
 
-**`lib/auth.ts`** provides helpers for reading and writing the authenticated user and token to/from `localStorage` (`saveAuth`, `getUser`, `getToken`, `logout`).
+### Frontend Flow
 
-**Components** (`components/`) hold reusable UI pieces such as `EventCard` and `Navbar`.
+```text
+Next.js Page or Component
+          ↓
+      API Helper
+          ↓
+   Backend REST API
+```
 
-### Data Flow Example — Booking a Ticket
-
-1. Attendee clicks "Book Ticket" on the event detail page.
-2. The frontend calls `POST /bookings` via `apiRequest()`, which includes the JWT in the header.
-3. `auth.middleware` verifies the token and populates `req.user`.
-4. `role.middleware` confirms the user is an `ATTENDEE`.
-5. `validate.middleware` checks that `eventId` is present and is a number.
-6. `BookingController.createBooking` calls `BookingService.createBooking(userId, eventId)`.
-7. The service checks the event exists, checks remaining capacity, checks for a duplicate booking, then calls `prisma.booking.create()`.
-8. The backend returns `201` with the booking object.
-9. The frontend shows a success message and refreshes the event details.
-
----
-
-## Database Design
-
-The project uses Prisma ORM with SQLite.
-
-### Models
-
-**User**
-
-| Field | Type | Notes |
-|---|---|---|
-| id | Int | Primary key, auto-increment |
-| name | String | |
-| email | String | Unique |
-| password | String | bcrypt hashed |
-| role | Role (enum) | `ORGANISER` or `ATTENDEE` |
-| createdAt | DateTime | |
-
-**Event**
-
-| Field | Type | Notes |
-|---|---|---|
-| id | Int | Primary key, auto-increment |
-| title | String | |
-| description | String | |
-| dateTime | DateTime | Must be a future date |
-| capacity | Int | Minimum 1 |
-| organiserId | Int | Foreign key → User |
-| createdAt | DateTime | |
-| updatedAt | DateTime | |
-
-**Booking**
-
-| Field | Type | Notes |
-|---|---|---|
-| id | Int | Primary key, auto-increment |
-| userId | Int | Foreign key → User |
-| eventId | Int | Foreign key → Event |
-| bookedAt | DateTime | |
-
-A unique constraint on `(userId, eventId)` enforces that one attendee cannot book the same event twice at the database level.
-
-### Relationships
-
-- A `User` with role `ORGANISER` can create many `Event` records.
-- A `User` with role `ATTENDEE` can create many `Booking` records.
-- An `Event` can have many `Booking` records.
-- A `Booking` belongs to exactly one `User` and one `Event`.
+The frontend stores authentication information locally and includes the JWT token in protected API requests.
 
 ---
 
-## Main Features
+## User Roles
 
-### Authentication
+CampPal uses role-based access control.
 
-- User registration
-- User login
-- Password hashing
-- JWT-based authentication
-- Protected backend routes
+### `USER`
 
-### User Roles
+Regular users can browse campgrounds, view events, create reservations, and manage their own bookings.
 
-The system has two user roles:
+### `CAMP_OWNER`
 
-- **Organiser**
-- **Attendee**
+Campground owners can manage their own campground, events, reservations, and guest operations.
 
-### Organiser Features
+### `ADMIN`
 
-Organisers can:
+Administrators have system-wide management permissions.
 
-- Create events
-- Update their own events
-- Delete their own events
-- View organiser dashboard
-- View number of tickets sold
-- View attendee list for each event
-
-### Attendee Features
-
-Attendees can:
-
-- View all events
-- View event details
-- Book tickets
-- View their own bookings
-
-### Booking Rules
-
-The system:
-
-- Prevents duplicate bookings (enforced at both the database level via a unique constraint on `userId + eventId`, and at the service layer)
-- Prevents overbooking (checks remaining capacity before creating a booking)
-- Validates event capacity
-- Allows only attendees to book tickets
-
-### Role-Based UI Behaviour
-
-The frontend changes based on the logged-in user's role:
-
-- Attendees see booking options.
-- Organisers see dashboard and event management options.
-- Organisers can only edit/delete their own events.
-- Other organisers can view public event details but cannot update or delete events they do not own.
-
----
-
-## Bonus Features Implemented
-
-The following bonus features from the project specification have been implemented:
-
-### Search and Filtering
-
-The `GET /events` endpoint supports the following optional query parameters:
-
-| Parameter | Description |
-|---|---|
-| `search` | Filters events by title or description (case-insensitive substring match) |
-| `capacity` | Returns only events with capacity greater than or equal to the given number |
-| `sort` | Sorts events by date — `asc` (default) or `desc` |
-
-These filters can be combined. The events page in the frontend exposes all three as form inputs.
-
-### Pagination
-
-The `GET /events` endpoint supports cursor-based pagination via `page` and `limit` query parameters.
-
-| Parameter | Default | Description |
-|---|---|---|
-| `page` | 1 | The page number to retrieve |
-| `limit` | 5 | The number of events per page |
-
-The response includes `total`, `totalPages`, `page`, and `limit` fields alongside the data array.
-
----
-
-## Project Requirements Covered
-
-### Backend Requirements
-
-- RESTful API design
-- Proper route structure
-- Prisma ORM models
-- Relational database models
-- Input validation
-- JWT authentication
-- Role-based authorisation
-- Error handling
-- Prisma migrations
-- Seed script
-- Async/await usage
-- Proper HTTP status codes
-- Separation of concerns using routes, controllers, services, and middleware
-
-### Frontend Requirements
-
-- Next.js frontend
-- React components
-- API integration using fetch
-- Protected pages
-- Role-based UI behaviour
-- Form validation
-- Responsive layout with Tailwind CSS
-- Loading states
-- Error and success feedback
-
-### Deployment Requirements
-
-- Dockerfile for backend
-- Dockerfile for frontend
-- Docker Compose configuration
-- Environment variables
-- Production build support
+Frontend role checks are used to improve the user experience. Actual authorization and ownership controls are enforced by the backend.
 
 ---
 
 ## Project Structure
 
-```txt
-event-booking-main/
-  README.md
-  docker-compose.yml
-  .gitignore
+The repository is organized into separate backend and frontend applications.
 
-  event-booking-backend/
-    Dockerfile
-    .dockerignore
-    .env.example
-    package.json
-    prisma/
-      schema.prisma
-      migrations/
-      seed.js
-    src/
-      controllers/
-        auth.controller.js
-        event.controller.js
-        booking.controller.js
-      routes/
-        auth.routes.js
-        event.routes.js
-        booking.routes.js
-      services/
-        auth.service.js
-        event.service.js
-        booking.service.js
-      middlewares/
-        auth.middleware.js
-        role.middleware.js
-        validate.middleware.js
-        error.middleware.js
-      validators/
-        auth.validator.js
-        event.validator.js
-        booking.validator.js
-      lib/
-        prisma.js
-      utils/
-        AppError.js
-      app.js
-      server.js
-
-  event-booking-frontend/
-    Dockerfile
-    .dockerignore
-    .env.example
-    package.json
-    next.config.ts
-    app/
-      page.tsx
-      layout.tsx
-      events/
-        page.tsx
-        [id]/page.tsx
-      my-bookings/
-        page.tsx
-      login/
-        page.tsx
-      register/
-        page.tsx
-      organiser/
-        dashboard/page.tsx
-        events/
-          new/page.tsx
-          [id]/edit/page.tsx
-    components/
-      EventCard.tsx
-      Navbar.tsx
-    lib/
-      api.ts
-      auth.ts
+```text
+camping-system/
+├── camping-system-backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── migrations/
+│   │   └── seed.js
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── middlewares/
+│   │   ├── validators/
+│   │   ├── jobs/
+│   │   ├── lib/
+│   │   ├── app.js
+│   │   └── server.js
+│   ├── package.json
+│   └── .env.example
+│
+├── camping-system-frontend/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── public/
+│   ├── package.json
+│   └── .env.example
+│
+├── README.md
+└── .gitignore
 ```
+
+The exact folder structure may change as development continues.
 
 ---
 
 ## Environment Variables
 
-Real `.env` files are not committed to the repository. Instead, `.env.example` files are provided to show the required environment variables.
+Real environment files must not be committed to GitHub.
 
-### Backend Environment Variables
+Create a `.env` file inside the backend folder based on `.env.example`.
 
-Create a `.env` file inside `event-booking-backend`:
-
-```bash
-cd event-booking-backend
-cp .env.example .env
-```
-
-Example backend `.env`:
+Example:
 
 ```env
 DATABASE_URL="file:./dev.db"
-JWT_SECRET="change_this_secret"
+JWT_SECRET="replace_with_a_secure_secret"
 PORT=5050
 ```
 
-### Frontend Environment Variables
+Create a `.env.local` file inside the frontend folder.
 
-Create a `.env.local` file inside `event-booking-frontend`:
-
-```bash
-cd event-booking-frontend
-cp .env.example .env.local
-```
-
-Example frontend `.env.local`:
+Example:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5050
 ```
 
-### Note About Docker
+Depending on the notification configuration, the backend may also require email or SMS provider credentials.
 
-When running the project with Docker Compose, the necessary environment variables are already defined inside `docker-compose.yml`.
-
-Therefore, Docker users can run the project without manually creating `.env` files.
+Never commit real passwords, API keys, JWT secrets, email credentials, or SMS provider credentials.
 
 ---
 
-## Required Software
+## Running the Project Locally
 
-To run the project locally, install:
-
-- Node.js
-- npm
-- Docker Desktop
-- Git
-
-Docker Desktop must be running before using Docker Compose.
-
----
-
-## Running the Project with Docker
-
-Docker is the recommended way to run the project.
-
-From the root project folder:
+### 1. Clone the Repository
 
 ```bash
-cd event-booking-main
-docker compose up --build
+git clone <repository-url>
+cd <repository-folder>
 ```
 
-After the containers start, open:
-
-```txt
-Frontend: http://localhost:3000
-Backend:  http://localhost:5050
-```
-
-To stop the running containers:
-
-```txt
-CTRL + C
-```
-
-Then run:
+### 2. Start the Backend
 
 ```bash
-docker compose down
-```
-
-To run the containers in the background:
-
-```bash
-docker compose up --build -d
-```
-
-To view logs:
-
-```bash
-docker compose logs -f
-```
-
----
-
-## Seeding the Database with Docker
-
-If the database is empty or sample data is needed, run this command while Docker Compose is running:
-
-```bash
-docker compose exec backend npm run prisma:seed
-```
-
-This command runs the seed script inside the backend container.
-
-Important note:
-
-The seed script may reset existing sample data depending on its implementation. Use it when sample test data is needed.
-
----
-
-## Docker Database Persistence
-
-The Docker setup uses a volume for the SQLite database.
-
-This means that data should remain available after:
-
-```bash
-docker compose down
-docker compose up --build
-```
-
-However, data will be removed if volumes are deleted using:
-
-```bash
-docker compose down -v
-```
-
-Do not use `docker compose down -v` unless you intentionally want to delete the database volume.
-
----
-
-## Running the Project Locally Without Docker
-
-Docker is recommended, but the project can also be run manually.
-
-### Backend Local Setup
-
-Open a terminal:
-
-```bash
-cd event-booking-backend
+cd camping-system-backend
 npm install
 npm run prisma:generate
 npm run prisma:migrate
@@ -513,356 +273,130 @@ npm run prisma:seed
 npm run dev
 ```
 
-The backend will run on:
+The backend normally runs at:
 
-```txt
+```text
 http://localhost:5050
 ```
 
-### Frontend Local Setup
+### 3. Start the Frontend
 
 Open another terminal:
 
 ```bash
-cd event-booking-frontend
+cd camping-system-frontend
 npm install
 npm run dev
 ```
 
-The frontend will run on:
+The frontend normally runs at:
 
-```txt
+```text
 http://localhost:3000
 ```
 
 ---
 
-## Production Build
+## Database Setup
 
-### Frontend Production Build
+The project uses Prisma ORM with SQLite during development.
 
-```bash
-cd event-booking-frontend
-npm run build
-```
-
-### Backend Production Start
+Useful commands:
 
 ```bash
-cd event-booking-backend
-npm start
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
 ```
+
+Depending on the scripts defined in `package.json`, the equivalent Prisma commands may also be run directly:
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
+```
+
+The local SQLite database file should not be committed unless the project explicitly requires it.
 
 ---
 
-## Sample Usage Flow
+## Authentication
 
-### Attendee Flow
+CampPal uses JWT-based authentication.
 
-1. Register as an attendee.
-2. Login.
-3. Go to the Events page.
-4. Open an event detail page.
-5. Click Book Ticket.
-6. Go to My Bookings.
-7. Verify that the booking is listed.
+After login, protected requests include the token in the request header:
 
-### Organiser Flow
-
-1. Register as an organiser.
-2. Login.
-3. Go to Organiser Dashboard.
-4. Create a new event.
-5. Edit the event.
-6. View attendee list.
-7. Delete the event if needed.
-
----
-
-## API Documentation
-
-Base URL:
-
-```txt
-http://localhost:5050
-```
-
-### Authentication Routes
-
-#### Register
-
-```http
-POST /auth/register
-```
-
-Request body:
-
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "123456",
-  "role": "ATTENDEE"
-}
-```
-
-Response (`201`):
-
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "token": "<jwt>",
-  "user": { "id": 1, "name": "Test User", "email": "test@example.com", "role": "ATTENDEE" }
-}
-```
-
-#### Login
-
-```http
-POST /auth/login
-```
-
-Request body:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "123456"
-}
-```
-
-Response (`200`):
-
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "token": "<jwt>",
-  "user": { "id": 1, "name": "Test User", "email": "test@example.com", "role": "ATTENDEE" }
-}
-```
-
----
-
-### Event Routes
-
-#### Get All Events
-
-```http
-GET /events
-```
-
-Optional query parameters:
-
-| Parameter | Type | Description |
-|---|---|---|
-| `search` | string | Filter by title or description |
-| `capacity` | number | Minimum capacity filter |
-| `sort` | `asc` \| `desc` | Sort by date (default: `asc`) |
-| `page` | number | Page number (default: `1`) |
-| `limit` | number | Results per page (default: `5`) |
-
-Response (`200`):
-
-```json
-{
-  "success": true,
-  "page": 1,
-  "limit": 5,
-  "total": 12,
-  "totalPages": 3,
-  "data": [ ]
-}
-```
-
-#### Get Single Event
-
-```http
-GET /events/:id
-```
-
-Response (`200`) includes organiser info, booking count, `ticketsSold`, and `remainingCapacity`.
-
-#### Create Event
-
-Requires: authenticated organiser.
-
-```http
-POST /events
+```text
 Authorization: Bearer <token>
 ```
 
-Request body:
+The backend verifies:
 
-```json
-{
-  "title": "Frontend Demo Day",
-  "description": "Final project frontend presentation event.",
-  "dateTime": "2026-06-01T12:00:00.000Z",
-  "capacity": 20
-}
-```
+- Whether the token exists
+- Whether the token is valid
+- Whether the user has the required role
+- Whether the user owns the requested resource
 
-Response (`201`):
-
-```json
-{
-  "success": true,
-  "message": "Event created successfully",
-  "data": { }
-}
-```
-
-#### Update Event
-
-Requires: authenticated organiser who owns the event.
-
-```http
-PUT /events/:id
-Authorization: Bearer <token>
-```
-
-All fields are optional. Capacity cannot be reduced below the number of existing bookings.
-
-#### Delete Event
-
-Requires: authenticated organiser who owns the event. Blocked if the event has any bookings.
-
-```http
-DELETE /events/:id
-Authorization: Bearer <token>
-```
+Passwords are stored as bcrypt hashes and are never saved as plain text.
 
 ---
 
-### Booking Routes
+## Current Development Areas
 
-#### Create Booking
+The project continues to evolve. Planned or developing features include:
 
-Requires: authenticated attendee.
-
-```http
-POST /bookings
-Authorization: Bearer <token>
-```
-
-Request body:
-
-```json
-{
-  "eventId": 1
-}
-```
-
-Response (`201`):
-
-```json
-{
-  "success": true,
-  "message": "Booking created successfully",
-  "data": { }
-}
-```
-
-#### Get My Bookings
-
-Requires: authenticated attendee.
-
-```http
-GET /bookings/me
-Authorization: Bearer <token>
-```
-
-Response (`200`) returns an array of bookings, each including the full event and organiser details.
+- Full administrator panel
+- Campground application and approval workflow
+- Payment integration
+- Refund and cancellation policies
+- Email notifications
+- SMS notifications
+- Real image and file uploads
+- Advanced campground availability management
+- Occupancy and sales reports
+- Owner performance dashboard
+- No-show management
+- Improved security and audit logging
+- Production deployment configuration
 
 ---
 
-### Organiser Dashboard Route
+## Git and Security Notes
 
-Requires: authenticated organiser.
+The following files and folders should normally be ignored:
 
-```http
-GET /events/dashboard/organiser
-Authorization: Bearer <token>
-```
-
-Response (`200`) returns an array of the organiser's events, each including:
-
-- `ticketsSold`
-- `remainingCapacity`
-- `attendees` — array of `{ bookingId, bookedAt, attendee: { id, name, email } }`
-
----
-
-## Authentication Flow
-
-1. A user registers or logs in.
-2. The backend validates user input and credentials.
-3. The backend returns a JWT token and user information.
-4. The frontend stores the token and user information in `localStorage`.
-5. Protected API requests include the token in the `Authorization` header:
-
-```txt
-Authorization: Bearer <token>
-```
-
-6. `auth.middleware.js` verifies the token using the `JWT_SECRET` environment variable. If the token is missing or invalid, a `401` response is returned.
-7. `role.middleware.js` checks `req.user.role` against the roles permitted for that route. If the role does not match, a `403` response is returned.
-8. For ownership-sensitive operations (update/delete event), the service layer additionally checks that `event.organiserId === req.user.id` and returns a `403` if not.
-
----
-
-## Role-Based Access Control
-
-Role-based access control is implemented on both the frontend and backend.
-
-Frontend:
-
-- Shows or hides UI elements depending on the user's role.
-- Redirects users away from pages they should not access.
-- Shows different buttons for organisers and attendees.
-
-Backend:
-
-- Verifies JWT tokens.
-- Checks user roles.
-- Checks event ownership before allowing update or delete operations.
-
-Important:
-
-Frontend role checks improve user experience, but real security is enforced on the backend.
-
----
-
-## Notes About Ignored Files
-
-The following files and folders are intentionally not committed:
-
-```txt
-node_modules
-.next
+```text
+node_modules/
+.next/
 .env
 .env.local
 dev.db
+*.log
 ```
 
-Reasons:
+Example environment files may be committed:
 
-- `node_modules` contains installed npm packages and can be recreated with `npm install`.
-- `.next` is generated by Next.js during build and can be recreated with `npm run build`.
-- `.env` and `.env.local` are local environment files.
-- `dev.db` is a local SQLite database file and can be recreated using Prisma migrations and seed scripts.
+```text
+.env.example
+```
 
-Example environment files are committed instead:
+Before pushing code to GitHub, verify that no sensitive credentials are included:
 
-```txt
-event-booking-backend/.env.example
-event-booking-frontend/.env.example
+```bash
+git status
 ```
 
 ---
 
-## Academic Integrity Note
+## Project Status
 
-External documentation and development tools may have been used for guidance during implementation. The submitted project was reviewed and understood by the team members. Any reused or adapted code should be cited in the relevant source files according to the course policy.
+CampPal is currently being developed as a scalable camping discovery, reservation, and campground management platform.
+
+The current system includes core authentication, role-based access, campground and event functionality, reservation management, and campground check-in/check-out operations. Additional administration, payment, notification, and reporting modules are planned as the project develops.
+
+---
+
+## License
+
+A licence has not yet been defined for this project. All rights are reserved unless a licence file is added to the repository.
