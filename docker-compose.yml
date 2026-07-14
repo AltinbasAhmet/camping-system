@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./camping-system-backend
+    container_name: camping-system-backend
+    ports:
+      - "5050:5050"
+      - "5555:5555"
+    environment:
+      DATABASE_URL: "file:/data/dev.db"
+      JWT_SECRET: "supersecretkey"
+      PORT: "5050"
+      # SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / MAIL_FROM (opsiyonel)
+      # TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_NUMBER (opsiyonel)
+      # Tanımlanmazsa e-posta/SMS gönderimleri konsola loglanır.
+    volumes:
+      - backend_db:/data
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./camping-system-frontend
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:5050"
+    container_name: camping-system-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  backend_db:
+  backend_uploads:
