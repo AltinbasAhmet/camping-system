@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  CAMP_OWNER
+  SYSTEM_ADMIN
+  STAFF
+}
+
+enum CampStatus {
+  PENDING
+  ACTIVE
+  PASSIVE
+  REJECTED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+  CHECKED_OUT
+}
+
+enum AccommodationType {
+  TENT
+  CARAVAN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?  @unique
+  phone     String?  @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  // Sadece CAMP_OWNER rolü için anlamlıdır: kayıt sırasında admin onayı
+  // gerekir. USER/STAFF/SYSTEM_ADMIN için APPROVED olarak kalır.
+  verificationStatus VerificationStatus @default(APPROVED)
+
+  // Kayıt ve girişte e-posta/telefon doğrulama (OTP) için.
+  contactVerifiedAt DateTime?
+  otpCode           String?
+  otpPurpose        String?
+  otpExpiresAt      DateTime?
+
+  ownedCamps       Camp[]            @relation("CampOwner")
+  reservations     CampReservation[]
+  eventBookings    EventBooking[]
+  staffAssignments CampStaff[]
+  organizedEvents  CampEvent[]       @relation("EventOrganizer")
+}
+
+model Camp {
+  id             Int        @id @default(autoincrement())
+  ownerId        Int
+  owner          User       @relation("CampOwner", fields: [ownerId], references: [id])
+
+  name           String
+  description    String
+  city           String
+  district       String?
+  address        String
+  latitude       Float?
+  longitude      Float?
+
+  phone          String
+  email          String?
+  customerNumber String     @unique
+
+  totalCapacity   Int
+  caravanCapacity Int
+  tentCapacity    Int?
+
+  pricePerNight Float?
+  status        CampStatus @default(PENDING)
+
+  hasToilet      Boolean @default(false)
+  hasShower      Boolean @default(false)
+  hasHotWater    Boolean @default(false)
+  hasElectricity Boolean @default(false)
+  hasWifi        Boolean @default(false)
+  hasMarket      Boolean @default(false)
+  petFriendly    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos       CampPhoto[]
+  events       CampEvent[]
+  reservations CampReservation[]
+  staff        CampStaff[]
+}
+
+model CampPhoto {
+  id       Int     @id @default(autoincrement())
+  campId   Int
+  camp     Camp    @relation(fields: [campId], references: [id])
+  imageUrl String
+  isCover  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model CampReservation {
+  id      Int  @id @default(autoincrement())
+
+  campId  Int
+  camp    Camp @relation(fields: [campId], references: [id])
+
+  userId  Int
+  user    User @relation(fields: [userId], references: [id])
+
+  checkInDate  DateTime
+  checkOutDate DateTime
+
+  // Kullanıcı çadırla da gelebilir; plaka sadece karavanla gelenlerde
+  // zorunlu (bkz. reservation.validator.js).
+  accommodationType AccommodationType @default(TENT)
+  plateNumber       String?
+  guestCount        Int
+
+  reservationCode String            @unique
+  status          ReservationStatus @default(PENDING)
+  respondedAt     DateTime?
+
+  // Check-in/check-out'tan bir gün önce hatırlatma gönderildi mi?
+  // Zamanlanmış görev (bkz. src/jobs/reminder.job.js) aynı hatırlatmayı
+  // tekrar tekrar göndermesin diye kullanılır.
+  checkInReminderSentAt  DateTime?
+  checkOutReminderSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guests ReservationGuest[]
+}
+
+model ReservationGuest {
+  id            Int             @id @default(autoincrement())
+  reservationId Int
+  reservation   CampReservation @relation(fields: [reservationId], references: [id])
+
+  fullName String
+
+  // MVP için direkt T.C. saklamamanız daha güvenli.
+  // Gerçek sistemde bu alan şifrelenmeli.
+  nationalIdLast4 String?
+  nationalIdMasked String?
+
+  createdAt DateTime @default(now())
+}
+
+model CampEvent {
+  id          Int      @id @default(autoincrement())
+
+  campId      Int
+  camp        Camp     @relation(fields: [campId], references: [id])
+
+  // Etkinliği kim oluşturdu: kamp sahibi kendi kampı için, ya da bir kampçı
+  // herhangi bir aktif kamp için etkinlik düzenleyebilir.
+  organizerId Int
+  organizer   User     @relation("EventOrganizer", fields: [organizerId], references: [id])
+
+  title       String
+  description String
+  dateTime    DateTime
+  capacity    Int
+  price       Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings EventBooking[]
+  photos   EventPhoto[]
+}
+
+model EventPhoto {
+  id       Int       @id @default(autoincrement())
+  eventId  Int
+  event    CampEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  imageUrl String
+  isCover  Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model EventBooking {
+  id      Int @id @default(autoincrement())
+
+  eventId Int
+  event   CampEvent @relation(fields: [eventId], references: [id])
+
+  userId  Int
+  user    User      @relation(fields: [userId], references: [id])
+
+  guestCount Int     @default(1)
+  bookedAt   DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model CampStaff {
+  id     Int @id @default(autoincrement())
+
+  campId Int
+  camp   Camp @relation(fields: [campId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([campId, userId])
+}
