@@ -1,0 +1,10 @@
+const express = require("express");
+const controller = require("../controllers/campComment.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
+const validate = require("../middlewares/validate.middleware");
+const { createCampCommentSchema } = require("../validators/campComment.validator");
+const router = express.Router();
+router.get("/:campId/comments", controller.getCampComments);
+router.post("/:campId/comments", authMiddleware, validate(createCampCommentSchema), controller.createCampComment);
+router.delete("/comments/:commentId", authMiddleware, controller.deleteCampComment);
+module.exports = router;

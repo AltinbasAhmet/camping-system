@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./camping-system-backend
+    container_name: camping-system-backend
+    ports:
+      - "5050:5050"
+      - "5555:5555"
+    # SMTP ve Twilio bilgilerini backend/.env dosyasından konteynıra aktarır.
+    env_file:
+      - ./camping-system-backend/.env
+    environment:
+      DATABASE_URL: "file:/data/dev.db"
+      JWT_SECRET: "supersecretkey"
+      PORT: "5050"
+      # DATABASE_URL Docker volume yolunu kullanmalı; diğer bildirim ayarları
+      # yukarıdaki env_file üzerinden alınır.
+    volumes:
+      - backend_db:/data
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./camping-system-frontend
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:5050"
+    container_name: camping-system-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  backend_db:
+  backend_uploads:
