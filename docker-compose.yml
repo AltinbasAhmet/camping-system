@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./camping-system-backend
+    container_name: camping-system-backend
+    ports:
+      - "5050:5050"
+    env_file:
+      - ./camping-system-backend/.env
+    environment:
+      DATABASE_URL: file:/data/dev.db
+      PORT: "5050"
+      FRONTEND_URL: http://localhost:3001
+    volumes:
+      - backend_db:/data
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+  frontend:
+    build:
+      context: ./camping-system-frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5050
+    container_name: camping-system-frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  backend_db:
+  backend_uploads:

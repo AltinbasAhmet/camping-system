@@ -1,0 +1,10 @@
+
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+node_modules/
+uploads/
+.git/
+*.log
